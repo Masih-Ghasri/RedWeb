@@ -94,7 +94,6 @@ func (c *PaymentProcessedConsumer) handleMessage(ctx context.Context, d amqp.Del
 	err := c.useCase.UpdateOrderStatus(ctx, payload.OrderID, newStatus)
 	if err != nil {
 		log.Printf("Failed to update order %s: %v", payload.OrderID, err)
-
 		d.Nack(false, false)
 		return
 	}
