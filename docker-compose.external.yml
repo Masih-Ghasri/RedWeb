@@ -32,7 +32,7 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  rabbitmq:
+  RabbitMQ:
     image: rabbitmq:4-management
     container_name: RedWeb-rabbitmq
     ports:
@@ -43,14 +43,14 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
 
-  mock-bank:
-    build:
-      context: ./services/mock-bank
-      dockerfile: ../../services/payment-service/Dockerfile
-    container_name: ecommerce-mock-bank
-    ports:
-      - "9090:9090"
-    restart: unless-stopped
+#  mock-bank:
+#    build:
+#      context: ./services/mock-bank
+#      dockerfile: ../../services/payment-service/Dockerfile
+#    container_name: ecommerce-mock-bank
+#    ports:
+#      - "9090:9090"
+#    restart: unless-stopped
 
 volumes:
   postgres_data:
