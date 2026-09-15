@@ -8,6 +8,5 @@ import (
 
 type OutboxRepository interface {
 	GetPendingEvents(ctx context.Context, limit int) ([]*domain.OutboxEvent, error)
-
 	MarkAsPublished(ctx context.Context, id string) error
 }

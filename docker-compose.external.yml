@@ -43,6 +43,15 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
 
+  mock-bank:
+    build:
+      context: ./services/mock-bank
+      dockerfile: ../../services/payment-service/Dockerfile
+    container_name: ecommerce-mock-bank
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   mongodb_data:

@@ -8,22 +8,11 @@ import (
 )
 
 type RabbitMQPublisher struct {
-	conn    *amqp.Connection
 	channel *amqp.Channel
 }
 
-func NewRabbitMQPublisher(amqpURI string) (*RabbitMQPublisher, error) {
-	conn, err := amqp.Dial(amqpURI)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, fmt.Errorf("failed to open a channel: %w", err)
-	}
-
-	err = ch.ExchangeDeclare(
+func NewRabbitMQPublisher(ch *amqp.Channel) *RabbitMQPublisher {
+	err := ch.ExchangeDeclare(
 		"order.exchange", // name
 		"topic",          // type
 		true,             // durable
@@ -33,17 +22,16 @@ func NewRabbitMQPublisher(amqpURI string) (*RabbitMQPublisher, error) {
 		nil,              // arguments
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to declare exchange: %w", err)
+		fmt.Printf("Warning: failed to declare exchange: %v\n", err)
 	}
 
 	return &RabbitMQPublisher{
-		conn:    conn,
 		channel: ch,
-	}, nil
+	}
 }
 
 func (p *RabbitMQPublisher) Publish(ctx context.Context, exchange, routingKey string, payload []byte) error {
-	err := p.channel.PublishWithContext(ctx,
+	return p.channel.PublishWithContext(ctx,
 		exchange,
 		routingKey,
 		false, // mandatory
@@ -54,14 +42,4 @@ func (p *RabbitMQPublisher) Publish(ctx context.Context, exchange, routingKey st
 			Body:         payload,
 		},
 	)
-	return err
-}
-
-func (p *RabbitMQPublisher) Close() {
-	if p.channel != nil {
-		p.channel.Close()
-	}
-	if p.conn != nil {
-		p.conn.Close()
-	}
 }

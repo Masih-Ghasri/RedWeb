@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	brokerIn "github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/in/broker/rabbitmq"
 	orderHttp "github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/in/http"
-	"github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/out/broker/rabbitmq"
+	brokerOut "github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/out/broker/rabbitmq"
 	redisCache "github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/out/cache/redis"
 	postgresDb "github.com/Masih-Ghasri/RedWeb/services/order-service/internal/adapter/out/persistence/postgres"
 	"github.com/Masih-Ghasri/RedWeb/services/order-service/internal/config"
@@ -36,14 +38,21 @@ func main() {
 	// 2. Setup Redis
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisURI})
 
-	// 3. Setup RabbitMQ
-	amqpPublisher, err := rabbitmq.NewRabbitMQPublisher(cfg.RabbitMQURI)
+	// 3. Setup RabbitMQ Connection (Shared for Pub and Sub)
+	rabbitConn, err := amqp.Dial(cfg.RabbitMQURI)
 	if err != nil {
-		log.Fatalf("Failed to setup RabbitMQ Publisher: %v", err)
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
-	defer amqpPublisher.Close()
+	defer rabbitConn.Close()
 
-	// 4. Dependency Injection (Wiring)
+	rabbitChan, err := rabbitConn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to open RabbitMQ channel: %v", err)
+	}
+	defer rabbitChan.Close()
+
+	// 4. Wiring Adapters
+	amqpPublisher := brokerOut.NewRabbitMQPublisher(rabbitChan)
 	orderRepo := postgresDb.NewPostgresOrderRepository(db)
 	outboxRepo := postgresDb.NewPostgresOutboxRepository(db)
 	inventoryCache := redisCache.NewRedisInventoryCache(rdb)
@@ -51,11 +60,17 @@ func main() {
 	orderService := services.NewOrderService(orderRepo, inventoryCache)
 	orderHandler := orderHttp.NewOrderHandler(orderService)
 
-	// 5. Setup & Start Outbox Relay Worker (Background Process)
+	// 5. Start Outbox Relay Worker (Publisher)
 	relayWorker := services.NewOutboxRelayWorker(outboxRepo, amqpPublisher, 2*time.Second)
 	go relayWorker.Start(ctx)
 
-	// 6. Setup Router & Server
+	// 6. Start Payment Processed Consumer (Listener)
+	paymentConsumer := brokerIn.NewPaymentProcessedConsumer(rabbitChan, orderService)
+	if err := paymentConsumer.Start(ctx); err != nil {
+		log.Fatalf("Failed to start payment consumer: %v", err)
+	}
+
+	// 7. Setup Router & Server
 	mux := http.NewServeMux()
 	orderHttp.RegisterRoutes(mux, orderHandler)
 
@@ -71,7 +86,7 @@ func main() {
 		}
 	}()
 
-	// 7. Graceful Shutdown
+	// 8. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -85,5 +100,4 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP Server shutdown error: %v", err)
 	}
-	log.Println("Service exited properly")
 }

@@ -14,6 +14,7 @@ import (
 
 	brokerIn "github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/adapter/in/broker/rabbitmq"
 	brokerOut "github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/adapter/out/broker/rabbitmq"
+	gatewayAdapter "github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/adapter/out/external/payment_gateway"
 	postgresDb "github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/adapter/out/persistence/postgres"
 	redisCache "github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/adapter/out/redis"
 	"github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/config"
@@ -53,7 +54,9 @@ func main() {
 	idempotencyRepo := redisCache.NewRedisIdempotencyRepository(rdb)
 	eventPublisher := brokerOut.NewRabbitMQPublisher(ch)
 
-	paymentService := services.NewPaymentService(paymentRepo, idempotencyRepo, eventPublisher)
+	bankClient := gatewayAdapter.NewMockBankClient(cfg.BankGatewayURL)
+
+	paymentService := services.NewPaymentService(paymentRepo, idempotencyRepo, eventPublisher, bankClient)
 
 	// 5. Setup Consumer
 	consumer := brokerIn.NewOrderCreatedConsumer(ch, paymentService)

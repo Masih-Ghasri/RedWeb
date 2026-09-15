@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Masih-Ghasri/RedWeb/services/order-service/internal/core/domain"
 	"github.com/Masih-Ghasri/RedWeb/services/order-service/internal/core/ports"
-	"github.com/google/uuid"
 )
 
 type OrderService struct {
@@ -23,6 +24,7 @@ func NewOrderService(repo ports.OrderRepository, cache ports.InventoryCache) *Or
 	}
 }
 
+// 1. CreateOrder
 func (s *OrderService) CreateOrder(ctx context.Context, cmd ports.CreateOrderCommand) (*domain.Order, error) {
 	var orderItems []domain.OrderItem
 
@@ -73,4 +75,23 @@ func (s *OrderService) CreateOrder(ctx context.Context, cmd ports.CreateOrderCom
 	}
 
 	return order, nil
+}
+
+func (s *OrderService) GetOrder(ctx context.Context, id string) (*domain.Order, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID string, status string) error {
+	orderStatus := domain.OrderStatus(status)
+
+	if orderStatus != domain.StatusPaid && orderStatus != domain.StatusCanceled && orderStatus != domain.StatusFailed {
+		return fmt.Errorf("invalid status update requested: %s", status)
+	}
+
+	err := s.repo.UpdateStatus(ctx, orderID, orderStatus)
+	if err != nil {
+		return fmt.Errorf("failed to update order status to %s for order %s: %w", status, orderID, err)
+	}
+
+	return nil
 }

@@ -8,6 +8,7 @@ const (
 	StatusPending  OrderStatus = "PENDING"
 	StatusPaid     OrderStatus = "PAID"
 	StatusCanceled OrderStatus = "CANCELED"
+	StatusFailed   OrderStatus = "FAILED"
 )
 
 type OrderItem struct {

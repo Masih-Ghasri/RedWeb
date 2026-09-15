@@ -82,3 +82,10 @@ func (r *PostgresOrderRepository) GetByID(ctx context.Context, id string) (*doma
 	// TODO: Implement GET
 	return nil, nil
 }
+
+func (r *PostgresOrderRepository) UpdateStatus(ctx context.Context, id string, status domain.OrderStatus) error {
+	return r.db.WithContext(ctx).
+		Model(&OrderModel{}).
+		Where("id = ?", id).
+		Update("status", string(status)).Error
+}

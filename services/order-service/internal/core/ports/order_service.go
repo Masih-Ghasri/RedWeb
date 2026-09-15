@@ -18,4 +18,6 @@ type CreateOrderCommand struct {
 
 type OrderUseCase interface {
 	CreateOrder(ctx context.Context, cmd CreateOrderCommand) (*domain.Order, error)
+	GetOrder(ctx context.Context, id string) (*domain.Order, error)
+	UpdateOrderStatus(ctx context.Context, orderID string, status string) error
 }

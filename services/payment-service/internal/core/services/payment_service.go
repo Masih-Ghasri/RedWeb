@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/core/domain"
 	"github.com/Masih-Ghasri/RedWeb/services/payment-service/internal/core/ports"
@@ -15,13 +16,15 @@ type PaymentService struct {
 	repo        ports.PaymentRepository
 	idempotency ports.IdempotencyRepository
 	publisher   ports.EventPublisher
+	gateway     ports.PaymentGateway
 }
 
-func NewPaymentService(repo ports.PaymentRepository, idem ports.IdempotencyRepository, pub ports.EventPublisher) *PaymentService {
+func NewPaymentService(repo ports.PaymentRepository, idem ports.IdempotencyRepository, pub ports.EventPublisher, gw ports.PaymentGateway) *PaymentService {
 	return &PaymentService{
 		repo:        repo,
 		idempotency: idem,
 		publisher:   pub,
+		gateway:     gw,
 	}
 }
 
@@ -32,7 +35,7 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, cmd ports.ProcessPa
 		return fmt.Errorf("idempotency check failed: %w", err)
 	}
 	if !acquired {
-		log.Printf("Payment for order %s is already being processed or completed", cmd.OrderID)
+		log.Printf("Payment for order %s is already processed", cmd.OrderID)
 		return nil
 	}
 
@@ -48,7 +51,19 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, cmd ports.ProcessPa
 		return err
 	}
 
-	payment.MarkAsSuccess()
+	bankCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	isSuccess, err := s.gateway.Charge(bankCtx, payment.OrderID, payment.Amount)
+	if err != nil {
+		return fmt.Errorf("bank gateway error: %w", err)
+	}
+
+	if isSuccess {
+		payment.MarkAsSuccess()
+	} else {
+		payment.MarkAsFailed()
+	}
 
 	if err = s.repo.Save(ctx, payment); err != nil {
 		return fmt.Errorf("failed to save payment: %w", err)
@@ -63,9 +78,9 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, cmd ports.ProcessPa
 
 	err = s.publisher.Publish(ctx, "order.exchange", "payment.processed", payloadBytes)
 	if err != nil {
-		log.Printf("Warning: Failed to publish PaymentProcessedEvent: %v", err)
+		log.Printf("Warning: Failed to publish event: %v", err)
 	}
 
-	log.Printf("Successfully processed payment for order %s", cmd.OrderID)
+	log.Printf("Processed payment for order %s. Bank Status: %s", cmd.OrderID, payment.Status)
 	return nil
 }
