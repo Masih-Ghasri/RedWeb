@@ -1,0 +1,12 @@
+go 1.26.0
+
+use (
+	.
+	./services
+	./services/cart-service
+	./services/catalog-service
+	./services/mock-bank
+	./services/order-service
+	./services/payment-service
+	./services/shipping-service
+)

@@ -1,0 +1,18 @@
+# Kept out of every image build context.
+#
+# The Dockerfiles build from the repository root (some of them use `COPY . .`),
+# and without this file each build ships the whole working tree first — which
+# includes ~37 MB of Docker image tarballs under images/, ~9 MB of screenshots
+# at the root, the .git directory and IDE metadata. None of it is needed to
+# compile any of the services.
+
+.git
+.idea/
+images/
+*.jpg
+*.tar
+
+# Nothing below this line is produced by this repository, but they are cheap
+# to exclude in case a build ever runs from a polluted tree.
+**/node_modules
+**/.DS_Store
