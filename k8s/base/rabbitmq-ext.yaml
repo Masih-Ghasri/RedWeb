@@ -2,9 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbitmq-ext-svc
+  namespace: ecommerce
   labels:
     app.kubernetes.io/name: rabbitmq
-    app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
   ports:
     - name: amqp
@@ -16,6 +16,9 @@ apiVersion: v1
 kind: Endpoints
 metadata:
   name: rabbitmq-ext-svc
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: rabbitmq
 subsets:
   - addresses:
       - ip: 192.168.0.6
