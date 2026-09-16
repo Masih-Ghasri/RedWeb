@@ -1,0 +1,19 @@
+FROM golang:1.26-alpine AS builder
+
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+
+WORKDIR /src
+COPY services/mock-bank/ ./
+RUN go build -ldflags="-w -s" -o /bin/mock-bank .
+
+FROM alpine:3.20
+
+RUN apk --no-cache add ca-certificates tzdata && \
+    adduser -D -g '' appuser
+
+USER appuser
+WORKDIR /app
+COPY --from=builder /bin/mock-bank .
+
+EXPOSE 9090
+CMD ["./mock-bank"]
