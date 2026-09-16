@@ -2,27 +2,24 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: redweb-ecommerce
-  namespace: argocd # این مانیفست باید در نیم‌اسپیس خود ArgoCD اجرا شود
+  namespace: argocd 
 spec:
   project: default
   
-  # ۱. منبع حقیقت (Source of Truth)
   source:
-    repoURL: 'https://github.com/Masih-Ghasri/RedWeb.git' # آدرس ریپازیتوری گیت شما
-    targetRevision: HEAD # خواندن از آخرین کامیت برنچ اصلی
-    path: k8s # پوشه اصلی که مانیفست‌ها در آن قرار دارند
+    repoURL: 'https://github.com/Masih-Ghasri/RedWeb.git' 
+    targetRevision: HEAD 
+    path: k8s 
     directory:
-      recurse: true # جادوی ArgoCD: خواندن تمام زیرپوشه‌های base و apps
+      recurse: true 
       
-  # ۲. مقصد استقرار (Destination)
   destination:
-    server: 'https://kubernetes.default.svc' # استقرار در همین کلاستری که ArgoCD نصب است
-    namespace: ecommerce # یک فضای کاملاً ایزوله برای اپلیکیشن ما می‌سازد
+    server: 'https://kubernetes.default.svc' 
+    namespace: ecommerce 
     
-  # ۳. سیاست‌های همگام‌سازی (Sync Policy)
   syncPolicy:
     automated:
-      prune: true      # اگر فایلی را از گیت پاک کردید، از کلاستر هم پاک می‌شود
-      selfHeal: true   # اگر کسی دستی پادی را حذف کرد، ArgoCD فوراً یکی جدید می‌سازد
+      prune: true    
+      selfHeal: true  
     syncOptions:
-      - CreateNamespace=true # اگر نیم‌اسپیس ecommerce وجود نداشت، خودش آن را می‌سازد
+      - CreateNamespace=true  

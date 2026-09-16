@@ -6,10 +6,8 @@ metadata:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
-  ports:
-    - port: 5432
-      targetPort: 5432
-      protocol: TCP
+  type: ExternalName
+  externalName: host.docker.internal
 ---
 apiVersion: v1
 kind: Endpoints

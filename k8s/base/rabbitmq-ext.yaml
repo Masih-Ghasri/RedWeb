@@ -4,13 +4,10 @@ metadata:
   name: rabbitmq-ext-svc
   labels:
     app.kubernetes.io/name: rabbitmq
-    app.kubernetes.io/part-of: ecommerce-infrastructure
+    app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
-  ports:
-    - name: amqp
-      port: 5672
-      targetPort: 5672
-      protocol: TCP
+  type: ExternalName
+  externalName: host.docker.internal
 ---
 apiVersion: v1
 kind: Endpoints

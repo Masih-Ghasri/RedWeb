@@ -4,12 +4,10 @@ metadata:
   name: redis-ext-svc
   labels:
     app.kubernetes.io/name: redis
-    app.kubernetes.io/part-of: ecommerce-infrastructure
+    app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
-  ports:
-    - port: 6379
-      targetPort: 6379
-      protocol: TCP
+  type: ExternalName
+  externalName: host.docker.internal
 ---
 apiVersion: v1
 kind: Endpoints

@@ -26,6 +26,5 @@ spec:
               value: "redis-ext-svc:6379"
             - name: RABBITMQ_URI
               value: "amqp://guest:guest@rabbitmq-ext-svc:5672/"
-            # اتصال به سرویس Mock Bank داخلی کوبرنتیز
             - name: BANK_GATEWAY_URL
               value: "http://mock-bank-svc:9090"
