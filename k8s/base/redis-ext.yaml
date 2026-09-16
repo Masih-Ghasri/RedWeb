@@ -6,8 +6,10 @@ metadata:
     app.kubernetes.io/name: redis
     app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
-  type: ExternalName
-  externalName: host.docker.internal
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Endpoints

@@ -6,8 +6,11 @@ metadata:
     app.kubernetes.io/name: rabbitmq
     app.kubernetes.io/part-of: RedWeb-infrastructure
 spec:
-  type: ExternalName
-  externalName: host.docker.internal
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Endpoints
