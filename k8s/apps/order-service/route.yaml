@@ -5,7 +5,7 @@ metadata:
   namespace: ecommerce
 spec:
   parentRefs:
-    - name: ecommerce-gateway
+    - name: traefik-gateway
       namespace: traefik
   hostnames:
     - "api.redweb.local"
