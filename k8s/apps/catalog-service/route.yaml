@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: catalog-route
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecommerce-app
+spec:
+  parentRefs:
+    - name: redweb-gateway
+      namespace: ecommerce
+  hostnames:
+    - "api.redweb.local"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1/products
+      backendRefs:
+        - name: catalog-service-svc
+          port: 80

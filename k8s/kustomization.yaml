@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce
+
+resources:
+  - base/namespace.yaml
+  - base/gateway.yaml
+  - base/postgres-ext.yaml
+  - base/mongo-ext.yaml
+  - base/redis-ext.yaml
+  - base/rabbitmq-ext.yaml
+  - apps/catalog-service/manifests.yaml
+  - apps/catalog-service/route.yaml
+  - apps/cart-service/manifests.yaml
+  - apps/cart-service/route.yaml
+  - apps/order-service/manifests.yaml
+  - apps/order-service/route.yaml
+  - apps/payment-service/manifests.yaml
+  - apps/shipping-service/manifests.yaml
+  - apps/mock-bank/manifests.yaml
+  - apps/mock-bank/route.yaml

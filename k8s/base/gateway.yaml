@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: redweb-gateway
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/part-of: ecommerce-app
+spec:
+  gatewayClassName: nginx
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: api.redweb.local
+      allowedRoutes:
+        namespaces:
+          from: Same

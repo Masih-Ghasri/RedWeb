@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-ext-svc
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: mongodb
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: mongo-ext-svc
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: mongodb
+subsets:
+  - addresses:
+      - ip: 192.168.0.6
+    ports:
+      - port: 27017

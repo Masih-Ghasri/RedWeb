@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecommerce-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: catalog-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: catalog-service
+        app.kubernetes.io/part-of: ecommerce-app
+    spec:
+      containers:
+        - name: catalog-service
+          image: local.registry/catalog-service:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MONGO_URI
+              value: "mongodb://mongo-ext-svc:27017"
+            - name: DB_NAME
+              value: "catalog_db"
+            - name: RABBITMQ_URI
+              value: "amqp://guest:guest@rabbitmq-ext-svc:5672/"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service-svc
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecommerce-app
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: catalog-service
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
