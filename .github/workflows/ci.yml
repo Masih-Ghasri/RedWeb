@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          check-latest: true
+
+      - name: Run Static Analysis (go vet)
+        run: |
+          go vet ./services/catalog-service/... \
+                 ./services/order-service/... \
+                 ./services/cart-service/... \
+                 ./services/payment-service/... \
+                 ./services/shipping-service/... \
+                 ./services/mock-bank/...
+
+      - name: Run Unit Tests
+        run: |
+          go test -v ./services/catalog-service/... \
+                     ./services/order-service/... \
+                     ./services/cart-service/...
+
+      - name: Compile Services
+        run: |
+          go build ./services/catalog-service/...
+          go build ./services/order-service/...
+          go build ./services/cart-service/...
+          go build ./services/payment-service/...
+          go build ./services/shipping-service/...
+          go build ./services/mock-bank/...
